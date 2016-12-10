@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>fluent-plugin-azure-loganalytics by yokawasa</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>fluent-plugin-azure-loganalytics</h1>
+          <h2>Azure Log Analytics output plugin for Fluentd</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/yokawasa/fluent-plugin-azure-loganalytics/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/yokawasa/fluent-plugin-azure-loganalytics/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/yokawasa/fluent-plugin-azure-loganalytics" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="fluent-plugin-azure-loganalytics" class="anchor" href="#fluent-plugin-azure-loganalytics" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>fluent-plugin-azure-loganalytics</h1>
+
+<p><a href="https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-overview">Azure Log Analytics</a> output plugin for Fluentd. The plugin aggregates semi-structured data in real-time and writes the buffered data via HTTPS request to Azure Log Analytics.</p>
+
+<p><img src="https://github.com/yokawasa/fluent-plugin-azure-loganalytics/raw/master/img/Azure-LogAnalytics-Fluentd.png" alt="fluent-plugin-azure-loganalytics overview"></p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>$ gem install fluent-plugin-azure-loganalytics
+</code></pre>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
+
+<h3>
+<a id="azure-log-analytics" class="anchor" href="#azure-log-analytics" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Azure Log Analytics</h3>
+
+<p>To start running with Log Analytics in the Microsoft Operations Management Suite (OMS), You need to create either an OMS workspace using the OMS website or Log Analytics workspace using your Azure subscription. Workspaces created either way are functionally equivalent. Here is an instruction:</p>
+
+<ul>
+<li><a href="https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-get-started">Get started with Log Analytics</a></li>
+</ul>
+
+<p>Once you have the workspace, get Workspace ID and Shared Key (either Primary Key or Secondary Key), which are needed by <a href="https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-data-collector-api">Log Analytics HTTP Data Collector API</a> to post the data to Log Analytics.</p>
+
+<h3>
+<a id="fluentd---fluentconf" class="anchor" href="#fluentd---fluentconf" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Fluentd - fluent.conf</h3>
+
+<pre><code>&lt;match azure-loganalytics.**&gt;
+    @type azure-loganalytics
+    customer_id CUSTOMER_ID   # Customer ID aka WorkspaceID String
+    shared_key KEY_STRING     # The primary or the secondary Connected Sources client authentication key
+    log_type EVENT_TYPE_NAME  # The name of the event type. ex) ApacheAccessLog
+    add_time_field true
+    time_field_name mytime
+    time_format %s
+    localtime true
+    add_tag_field true
+    tag_field_name mytag
+&lt;/match&gt;
+</code></pre>
+
+<ul>
+<li>
+<strong>customer_id (required)</strong> - Your Operations Management Suite workspace ID</li>
+<li>
+<strong>shared_key (required)</strong> - The primary or the secondary Connected Sources client authentication key</li>
+<li>
+<strong>log_type (required)</strong> - The name of the event type that is being submitted to Log Analytics</li>
+<li>
+<strong>add_time_field (optional)</strong> - Default:true. This option allows to insert a time field to record</li>
+<li>
+<strong>time_field_name (optional)</strong> - Default:time. This is required only when add_time_field is true</li>
+<li>
+<strong>localtime (optional)</strong> - Default:false. Time record is inserted with UTC (Coordinated Universal Time) by default. This option allows to use local time if you set localtime true. This is valid only when add_time_field is true</li>
+<li>
+<strong>time_format (optional)</strong> -  Default:%s. Time format for a time field to be inserted. Default format is %s, that is unix epoch time. If you want it to be more human readable, set this %Y%m%d-%H:%M:%S, for example. This is valid only when add_time_field is true.</li>
+<li>
+<strong>add_tag_field (optional)</strong> - Default:false. This option allows to insert a tag field to record</li>
+<li>
+<strong>tag_field_name (optional)</strong> - Default:tag. This is required only when add_time_field is true</li>
+</ul>
+
+<h2>
+<a id="configuration-examples" class="anchor" href="#configuration-examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration examples</h2>
+
+<p>fluent-plugin-azure-loganalytics adds <strong>time</strong> and <strong>tag</strong> attributes by default if <strong>add_time_field</strong> and <strong>add_tag_field</strong> are true respectively. Below are two types of the plugin configurations - Default and All options configuration.</p>
+
+<h3>
+<a id="1-default-configuration-no-options" class="anchor" href="#1-default-configuration-no-options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>(1) Default Configuration (No options)</h3>
+
+<p>fluent.conf</p>
+
+<pre><code>&lt;source&gt;
+    @type tail                         # input plugin
+    path /var/log/apache2/access.log   # monitoring file
+    pos_file /tmp/fluentd_pos_file     # position file
+    format apache                      # format
+    tag azure-loganalytics.access      # tag
+&lt;/source&gt;
+
+&lt;match azure-loganalytics.**&gt;
+    @type azure-loganalytics
+    customer_id 818f7bbc-8034-4cc3-b97d-f068dd4cd658
+    shared_key ppC5500KzCcDsOKwM1yWUvZydCuC3m+ds/2xci0byeQr1G3E0Jkygn1N0Rxx/yVBUrDE2ok3vf4ksCzvBmQXHw==(dummy)
+    log_type ApacheAccessLog
+&lt;/match&gt;
+</code></pre>
+
+<h3>
+<a id="2-configuration-with-all-options" class="anchor" href="#2-configuration-with-all-options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>(2) Configuration with All Options</h3>
+
+<p>fluent.conf</p>
+
+<pre><code>&lt;source&gt;
+    @type tail                         # input plugin
+    path /var/log/apache2/access.log   # monitoring file
+    pos_file /tmp/fluentd_pos_file     # position file
+    format apache                      # format
+    tag azure-loganalytics.access      # tag
+&lt;/source&gt;
+
+&lt;match azure-loganalytics.**&gt;
+    @type azure-loganalytics
+    customer_id 818f7bbc-8034-4cc3-b97d-f068dd4cd658
+    shared_key ppC5500KzCcDsOKwM1yWUvZydCuC3m+ds/2xci0byeQr1G3E0Jkygn1N0Rxx/yVBUrDE2ok3vf4ksCzvBmQXHw==(dummy)
+    log_type ApacheAccessLog
+    add_time_field true
+    time_field_name mytime
+    time_format %s
+    localtime true
+    add_tag_field true
+    tag_field_name mytag
+&lt;/match&gt;
+</code></pre>
+
+<h2>
+<a id="sample-inputs-and-expected-records" class="anchor" href="#sample-inputs-and-expected-records" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample inputs and expected records</h2>
+
+<p>An expected output record for sample input will be like this:</p>
+
+<p>Sample Input (apache access log)</p>
+
+<pre><code>124.211.152.156 - - [10/Dec/2016:05:28:52 +0000] "GET /test/foo.html HTTP/1.1" 200 323 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36"
+</code></pre>
+
+<p>Output Record</p>
+
+<p>The output record for sample input can be seen at Log Analytics portal like this:</p>
+
+<p><img src="https://github.com/yokawasa/fluent-plugin-azure-loganalytics/raw/master/img/Azure-LogAnalytics-Output-Image.png" alt="fluent-plugin-azure-loganalytics output image"></p>
+
+<h2>
+<a id="tests" class="anchor" href="#tests" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Tests</h2>
+
+<h3>
+<a id="running-test-code" class="anchor" href="#running-test-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running test code</h3>
+
+<pre><code>$ git clone https://github.com/yokawasa/fluent-plugin-azure-loganalytics.git
+$ cd fluent-plugin-azure-loganalytics
+
+# edit CONFIG params of test/plugin/test_azure_loganalytics.rb
+$ vi test/plugin/test_azure_loganalytics.rb
+
+# run test
+$ rake test
+</code></pre>
+
+<h3>
+<a id="creating-package-running-and-testing-locally" class="anchor" href="#creating-package-running-and-testing-locally" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Creating package, running and testing locally</h3>
+
+<pre><code>$ rake build
+$ rake install:local
+
+# running fluentd with your fluent.conf
+$ fluentd -c fluent.conf -vv &amp;
+
+# send test apache requests for testing plugin ( only in the case that input source is apache access log )
+$ ab -n 5 -c 2 http://localhost/test/foo.html
+</code></pre>
+
+<h2>
+<a id="change-log" class="anchor" href="#change-log" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change log</h2>
+
+<ul>
+<li><a href="ChangeLog.md">Changelog</a></li>
+</ul>
+
+<h2>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Links</h2>
+
+<ul>
+<li><a href="http://yokawasa.github.io/fluent-plugin-azure-loganalytics">http://yokawasa.github.io/fluent-plugin-azure-loganalytics</a></li>
+<li><a href="https://rubygems.org/gems/fluent-plugin-azure-loganalytics">https://rubygems.org/gems/fluent-plugin-azure-loganalytics</a></li>
+<li><a href="https://rubygems.org/gems/azure-loganalytics-datacollector-api">https://rubygems.org/gems/azure-loganalytics-datacollector-api</a></li>
+</ul>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>Bug reports and pull requests are welcome on GitHub at <a href="https://github.com/yokawasa/fluent-plugin-azure-loganalytics">https://github.com/yokawasa/fluent-plugin-azure-loganalytics</a>.</p>
+
+<h2>
+<a id="copyright" class="anchor" href="#copyright" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Copyright</h2>
+
+<table>
+  <tr>
+    <td>Copyright</td>
+<td>Copyright (c) 2016- Yoichi Kawasaki</td>
+  </tr>
+  <tr>
+    <td>License</td>
+<td>Apache License, Version 2.0</td>
+  </tr>
+</table>
+        </section>
+
+        <footer>
+          fluent-plugin-azure-loganalytics is maintained by <a href="https://github.com/yokawasa">yokawasa</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
